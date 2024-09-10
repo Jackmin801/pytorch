@@ -163,7 +163,9 @@ class TORCH_API ProcessGroupGloo : public Backend {
         u_values.emplace_back(value.begin(), value.end());
       }
 
-      std::cout << "GlooStore::multiSet key: " << key << " value: " << value << std::endl;
+      for (int i = 0; i < keys.size(); i++) {
+        std::cout << "GlooStore::multiSet key: " << keys[i] << " value: " << values[i] << std::endl;
+      }
 
       store_->multiSet(keys, u_values);
     }
