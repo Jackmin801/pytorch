@@ -306,8 +306,7 @@ class PythonStore : public ::c10d::Store {
       const std::vector<std::string>& keys,
       const std::vector<std::vector<uint8_t>>& values) override {
     pybind11::gil_scoped_acquire gil;
-    pybind11::function fn = pybind11::get_overload(
-        static_cast<const ::c10d::Store*>(this), "multi_set");
+    pybind11::function fn = pybind11::get_overload(static_cast<const ::c10d::Store*>(this), "multi_set");
     if (!fn) {
       return Store::multiSet(keys, values);
     }
@@ -991,7 +990,16 @@ and :class:`~torch.distributed.HashStore`).
               "set",
               [](::c10d::Store& store,
                  const std::string& key,
-                 const std::string& value) { store.set(key, toVec8(value)); },
+                 const std::string& value) { 
+
+                    // Print the key and data before flushing
+                    std::cout << "== Set Cmd ==" << std::endl;
+                    std::cout << "Key: " << key << std::endl;
+                    std::cout << "Value: " << value << std::endl;
+
+                    store.set(key, toVec8(value)); 
+                    std::cout << "-------------" << std::endl;
+                },
               py::call_guard<py::gil_scoped_release>(),
               R"(
 Inserts the key-value pair into the store based on the supplied ``key`` and
@@ -1018,8 +1026,18 @@ Example::
                  const std::string& desired_value) -> py::bytes {
                 auto value = [&]() {
                   py::gil_scoped_release guard;
-                  return store.compareSet(
-                      key, toVec8(expected_value), toVec8(desired_value));
+
+                    // Print the key and data before flushing
+                    std::cout << "== CompareSet Cmd ==" << std::endl;
+                    std::cout << "Key: " << key << std::endl;
+                    std::cout << "Expected Value: " << expected_value << std::endl;
+                    std::cout << "Desired Value: " << desired_value << std::endl;
+
+                  auto ret = store.compareSet(key, toVec8(expected_value), toVec8(desired_value));
+
+                    std::cout << "-------------" << std::endl;
+
+                  return ret;
                 }();
                 return toPyBytes(value);
               },
@@ -1298,10 +1316,14 @@ Example::
 )")
           .def(
               "multi_set",
-              [](::c10d::Store& store,
-                 const std::vector<std::string>& keys,
-                 const std::vector<std::string>& values) {
+              [](::c10d::Store& store, const std::vector<std::string>& keys, const std::vector<std::string>& values) {
+                std::cout << "== MultiSet Cmd ==" << std::endl;
+                for (int i = 0; i < keys.size(); i++) {
+                  std::cout << "Key(" << i << "): " << keys[i] << std::endl;
+                  std::cout << "Value(" << i << "): " << values[i] << std::endl;
+                }
                 store.multiSet(keys, toVec8(values));
+                std::cout << "-------------" << std::endl;
               },
               py::call_guard<py::gil_scoped_release>(),
               R"(

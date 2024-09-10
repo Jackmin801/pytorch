@@ -27,6 +27,7 @@
 #endif
 
 #include <torch/csrc/distributed/c10d/socket.h>
+#include <iostream>
 
 namespace c10d {
 namespace detail {
@@ -234,12 +235,17 @@ class SendBuffer {
   }
 
   void appendString(const std::string& str) {
+    std::cout << "String to append: " << str << std::endl;
     appendValue<uint64_t>(str.size());
     buffer.insert(buffer.end(), str.begin(), str.end());
     maybeFlush();
   }
 
   void appendBytes(const std::vector<uint8_t>& vec) {
+    // Convert vec to string
+    auto str = std::string(vec.begin(), vec.end());
+    std::cout << "Bytes to append: " << str << std::endl;
+
     appendValue<uint64_t>(vec.size());
     buffer.insert(buffer.end(), vec.begin(), vec.end());
     maybeFlush();
@@ -420,18 +426,21 @@ void TCPStore::set(const std::string& key, const std::vector<uint8_t>& data) {
   detail::timing_guard tguard(clientCounters_["set"]);
   const std::lock_guard<std::mutex> lock(activeOpLock_);
   detail::SendBuffer buffer(*client_, detail::QueryType::SET);
+
+  std::cout << "Full key (set): " << (keyPrefix_ + key) << std::endl;
+
   buffer.appendString(keyPrefix_ + key);
   buffer.appendBytes(data);
   buffer.flush();
 }
 
-std::vector<uint8_t> TCPStore::compareSet(
-    const std::string& key,
-    const std::vector<uint8_t>& expectedValue,
-    const std::vector<uint8_t>& desiredValue) {
+std::vector<uint8_t> TCPStore::compareSet(const std::string& key, const std::vector<uint8_t>& expectedValue, const std::vector<uint8_t>& desiredValue) {
   detail::timing_guard tguard(clientCounters_["compareSet"]);
   const std::lock_guard<std::mutex> lock(activeOpLock_);
   detail::SendBuffer buffer(*client_, detail::QueryType::COMPARE_SET);
+
+  std::cout << "Full key (compareSet): " << (keyPrefix_ + key) << std::endl;
+
   buffer.appendString(keyPrefix_ + key);
   buffer.appendBytes(expectedValue);
   buffer.appendBytes(desiredValue);
@@ -458,6 +467,13 @@ std::vector<uint8_t> TCPStore::doGet(const std::string& key) {
 int64_t TCPStore::add(const std::string& key, int64_t value) {
   detail::timing_guard tguard(clientCounters_["add"]);
   const std::lock_guard<std::mutex> lock(activeOpLock_);
+
+  // Print the key and data before flushing
+  std::cout << "== Add cmd ==" << std::endl;
+  std::cout << "Key: " << (keyPrefix_ + key) << std::endl;
+  std::cout << "Value: " << value << std::endl;
+  std::cout << "-------------" << std::endl;
+
   return incrementValueBy(keyPrefix_ + key, value);
 }
 
@@ -607,13 +623,9 @@ std::vector<std::vector<uint8_t>> TCPStore::multiGet(
   return result;
 }
 
-void TCPStore::multiSet(
-    const std::vector<std::string>& keys,
-    const std::vector<std::vector<uint8_t>>& values) {
+void TCPStore::multiSet(const std::vector<std::string>& keys, const std::vector<std::vector<uint8_t>>& values) {
   detail::timing_guard tguard(clientCounters_["multiSet"]);
-  TORCH_CHECK(
-      keys.size() == values.size(),
-      "multiSet keys and values vectors must be of same size");
+  TORCH_CHECK(keys.size() == values.size(), "multiSet keys and values vectors must be of same size");
   const std::lock_guard<std::mutex> lock(activeOpLock_);
 
   detail::SendBuffer buffer(*client_, detail::QueryType::MULTI_SET);
