@@ -114,6 +114,9 @@ class TORCH_API ProcessGroupGloo : public Backend {
 
     void set(const std::string& key, const std::vector<char>& value) override {
       std::vector<uint8_t> tmp(value.begin(), value.end());
+
+      std::cout << "GlooStore::set key: " << key << " value: " << value << std::endl;
+
       store_->set(key, tmp);
     }
 
@@ -159,6 +162,9 @@ class TORCH_API ProcessGroupGloo : public Backend {
       for (auto& value : values) {
         u_values.emplace_back(value.begin(), value.end());
       }
+
+      std::cout << "GlooStore::multiSet key: " << key << " value: " << value << std::endl;
+
       store_->multiSet(keys, u_values);
     }
 
