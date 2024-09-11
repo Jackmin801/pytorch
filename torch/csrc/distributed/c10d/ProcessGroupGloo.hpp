@@ -115,9 +115,11 @@ class TORCH_API ProcessGroupGloo : public Backend {
     void set(const std::string& key, const std::vector<char>& value) override {
       std::vector<uint8_t> tmp(value.begin(), value.end());
 
-      std::cout << "GlooStore::set key: " << key << " value: " << value << std::endl;
-
+      std::cout << "=== Gloo Set Cmd ===" << std::endl;
+      std::cout << "Key: " << key << std::endl;
+      std::cout << "Value: " << value << std::endl;
       store_->set(key, tmp);
+      std::cout << "--- Gloo Set Cmd End ---" << std::endl;
     }
 
     std::vector<uint8_t> getUint(const std::string& key) {
@@ -163,11 +165,14 @@ class TORCH_API ProcessGroupGloo : public Backend {
         u_values.emplace_back(value.begin(), value.end());
       }
 
+      std::cout << "=== Gloo MultiSet Cmd ===" << std::endl;
       for (int i = 0; i < keys.size(); i++) {
-        std::cout << "GlooStore::multiSet key: " << keys[i] << " value: " << values[i] << std::endl;
+        std::cout << "Key: " << keys[i] << std::endl;
+        std::cout << "Value: " << values[i] << std::endl;
       }
 
       store_->multiSet(keys, u_values);
+      std::cout << "--- Gloo MultiSet Cmd End ---" << std::endl;
     }
 
     void append(const std::string& key, const std::vector<char>& value)
