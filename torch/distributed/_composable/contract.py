@@ -166,8 +166,8 @@ def contract(state_cls: Type[_State] = _State):
                         f"{check_key}"
                         "Composable distributed API implementations cannot modify "
                         "the order of FQNs.\n"
-                        f"Original FQNs: {orig_only}\n"
-                        f"New FQNs: {new_only}"
+                        f"Original FQNs: {orig_fqns}\n"
+                        f"New FQNs: {new_fqns}"
                     )
 
             for orig_named_params, new_named_params in zip(
