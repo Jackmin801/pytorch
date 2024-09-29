@@ -81,13 +81,11 @@ def _get_managed_modules(root_modules: Tuple[nn.Module, ...]) -> List[nn.Module]
         Runs a DFS to collect managed modules, not recursing into modules with
         a non-composable API or ``fully_shard`` already applied.
         """
-        if not _is_composable_with_fsdp(module):
-            return
-        elif (
+        if (not _is_composable_with_fsdp(module) or
             module not in root_modules_set
-            and _get_module_fsdp_state(module) is not None
+            and _get_module_fsdp_state(module) is not None  # nested `fully_shard` module
         ):
-            return  # nested `fully_shard` module
+            return
         visited_modules.add(module)
         for submodule in module.children():
             if submodule not in visited_modules:
