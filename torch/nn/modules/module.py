@@ -12,6 +12,7 @@ from typing import (
     Dict,
     Iterator,
     List,
+    MutableMapping,
     Mapping,
     Optional,
     overload,
@@ -2098,7 +2099,7 @@ class Module:
         self._state_dict_pre_hooks[handle.id] = hook
         return handle
 
-    def _save_to_state_dict(self, destination, prefix, keep_vars):
+    def _save_to_state_dict(self, destination: MutableMapping[str, Any], prefix: str, keep_vars: bool) -> None:
         r"""Save module state to the `destination` dictionary.
 
         The `destination` dictionary will contain the state
@@ -2128,7 +2129,7 @@ class Module:
 
     # The user can pass an optional arbitrary mappable object to `state_dict`, in which case `state_dict` returns
     # back that same object. But if they pass nothing, an `OrderedDict` is created and returned.
-    T_destination = TypeVar("T_destination", bound=Dict[str, Any])
+    T_destination = TypeVar("T_destination", bound=Mapping[str, Any])
 
     @overload
     def state_dict(
@@ -2142,7 +2143,7 @@ class Module:
 
     # TODO: Change `*args` to `*` and remove the corresponding warning in docs when BC allows.
     # Also remove the logic for arg parsing together.
-    def state_dict(self, *args, destination=None, prefix="", keep_vars=False):
+    def state_dict(self, *args, destination: Mapping[str, Any] = None, prefix: str = "", keep_vars: bool = False) -> Mapping[str, Any]:
         r"""Return a dictionary containing references to the whole state of the module.
 
         Both parameters and persistent buffers (e.g. running averages) are
@@ -2207,6 +2208,7 @@ class Module:
             destination = OrderedDict()
             destination._metadata = OrderedDict()
 
+        # TODO: Whats the purpose of this?
         local_metadata = dict(version=self._version)
         if hasattr(destination, "_metadata"):
             destination._metadata[prefix[:-1]] = local_metadata
@@ -2294,13 +2296,13 @@ class Module:
 
     def _load_from_state_dict(
         self,
-        state_dict,
-        prefix,
-        local_metadata,
-        strict,
-        missing_keys,
-        unexpected_keys,
-        error_msgs,
+        state_dict: Mapping[str, Any],
+        prefix: str,
+        local_metadata: Mapping[str, Any],
+        strict: bool,
+        missing_keys: List[str],
+        unexpected_keys: List[str],
+        error_msgs: List[str],
     ):
         r"""Copy parameters and buffers from :attr:`state_dict` into only this module, but not its descendants.
 
@@ -2473,9 +2475,7 @@ class Module:
                     elif input_name[0] not in local_state:
                         unexpected_keys.append(key)
 
-    def load_state_dict(
-        self, state_dict: Mapping[str, Any], strict: bool = True, assign: bool = False
-    ):
+    def load_state_dict(self, state_dict: Mapping[str, Any], strict: bool = True, assign: bool = False) -> _IncompatibleKeys:
         r"""Copy parameters and buffers from :attr:`state_dict` into this module and its descendants.
 
         If :attr:`strict` is ``True``, then
@@ -2528,7 +2528,7 @@ class Module:
             # mypy isn't aware that "_metadata" exists in state_dict
             state_dict._metadata = metadata  # type: ignore[attr-defined]
 
-        def load(module, local_state_dict, prefix=""):
+        def load(module: "Module", local_state_dict: Mapping[str, Any], prefix: str=""):
             local_metadata = {} if metadata is None else metadata.get(prefix[:-1], {})
             if assign:
                 local_metadata["assign_to_params_buffers"] = assign
