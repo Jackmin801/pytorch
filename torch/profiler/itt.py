@@ -20,6 +20,7 @@ except ImportError:
         rangePush = _fail
         rangePop = _fail
         mark = _fail
+        range = _fail
 
     _itt = _ITTStub()  # type: ignore[assignment]
 
@@ -63,6 +64,7 @@ def mark(msg):
     return _itt.mark(msg)
 
 
+# TODO: Maybe rename this function to not have name conflict with Python's built-in range
 @contextmanager
 def range(msg, *args, **kwargs):
     """
