@@ -1,4 +1,5 @@
 # mypy: allow-untyped-defs
+from typing import Generator
 from contextlib import contextmanager
 
 
@@ -28,14 +29,14 @@ except ImportError:
 __all__ = ["is_available", "range_push", "range_pop", "mark", "range"]
 
 
-def is_available():
+def is_available() -> bool:
     """
     Check if ITT feature is available or not
     """
     return _itt.is_available()
 
 
-def range_push(msg):
+def range_push(msg: str) -> None:
     """
     Pushes a range onto a stack of nested range span.  Returns zero-based
     depth of the range that is started.
@@ -46,7 +47,7 @@ def range_push(msg):
     return _itt.rangePush(msg)
 
 
-def range_pop():
+def range_pop() -> None:
     """
     Pops a range off of a stack of nested range spans. Returns the
     zero-based depth of the range that is ended.
@@ -54,7 +55,7 @@ def range_pop():
     return _itt.rangePop()
 
 
-def mark(msg):
+def mark(msg: str) -> None:
     """
     Describe an instantaneous event that occurred at some point.
 
@@ -66,7 +67,7 @@ def mark(msg):
 
 # TODO: Maybe rename this function to not have name conflict with Python's built-in range
 @contextmanager
-def range(msg, *args, **kwargs):
+def range(msg: str, *args, **kwargs) -> Generator[None, None, None]:
     """
     Context manager / decorator that pushes an ITT range at the beginning
     of its scope, and pops it at the end. If extra arguments are given,
