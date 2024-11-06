@@ -1,12 +1,29 @@
 import os
 import site
 import sys
-import typing
+from typing import List
 
 import torch
 
 
-def _prefix_regex() -> typing.List[str]:
+def _prefix_regex() -> List[str]:
+    """
+    Generate a sorted list of path prefixes where Python packages and libraries might be installed.
+
+    This function compiles a list of absolute paths that include:
+    - Global site-packages directories.
+    - The Python module search paths from `sys.path`.
+    - The base directory for user-specific packages.
+    - The user-specific site-packages directory.
+    - The parent directory of the PyTorch library installation.
+
+    The paths are sorted in descending order of length and are returned with a trailing path separator.
+    This list can be used for prefix matching or path validation purposes.
+
+    Returns:
+        List[str]: A list of absolute path prefixes, each ending with the platform-specific path separator.
+    """
+
     raw_paths = (
         site.getsitepackages()
         + sys.path
