@@ -864,6 +864,8 @@ class FileSystemReader(StorageReader):
 
         for relative_path, reqs in per_file.items():
             new_path = self.fs.concat_path(self.path, relative_path)
+            if sum(i.lengths.numel() for i in reqs) < 1:
+                continue
             with self.fs.create_stream(new_path, "rb") as stream:
                 # TODO sort by offset and cache the reading
                 for req in reqs:
